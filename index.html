@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objectif Foulée des Géants 2027 — Programme 52 semaines</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
+  --accent:#2563eb; --accent2:#0f766e; --warning:#d97706; --danger:#dc2626;
+  --border:#dbe1e8; --soft:#eef4ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+.container{max-width:1200px;margin:auto;padding:24px}
+header{background:linear-gradient(135deg,#172554,#2563eb);color:white;padding:32px;border-radius:18px;margin-bottom:20px}
+header h1{margin:0 0 8px;font-size:30px}
+header p{margin:5px 0;opacity:.92}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.card h2{margin-top:0;font-size:21px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:var(--soft);color:#1d4ed8;font-size:12px;font-weight:bold}
+.warning{border-left:5px solid var(--warning);background:#fffaf0}
+.danger{border-left:5px solid var(--danger);background:#fff5f5}
+.success{border-left:5px solid var(--accent2);background:#f0fdfa}
+ul{padding-left:20px}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{border:1px solid var(--border);padding:10px;vertical-align:top;text-align:left}
+th{background:#f1f5f9;position:sticky;top:0;z-index:1}
+.week{margin-bottom:18px}
+.week h3{margin:0;background:#172554;color:white;padding:11px 14px;border-radius:10px 10px 0 0}
+.week .content{border:1px solid var(--border);border-top:0;background:white;border-radius:0 0 10px 10px;padding:14px}
+label{font-weight:bold;font-size:13px;display:block;margin-bottom:4px}
+input,textarea,select{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+textarea{min-height:70px;resize:vertical}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer}
+.primary{background:var(--accent);color:white}
+.secondary{background:#e5e7eb;color:#111827}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.small{font-size:13px;color:var(--muted)}
+.progress-wrap{background:#e5e7eb;border-radius:999px;height:16px;overflow:hidden}
+.progress{height:100%;width:0;background:var(--accent2);transition:.25s}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media print{
+ body{background:white}.controls,.no-print{display:none!important}
+ .card{box-shadow:none;break-inside:avoid}
+ header{background:#172554!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>🏃 Objectif Foulée des Géants 2027</h1>
+  <p><strong>Objectif :</strong> 10 km — septembre 2027</p>
+  <p>Programme progressif sur 52 semaines • 2 séances de course maximum/semaine • priorité à la cheville/Achille</p>
+</header>
+
+<div class="card">
+  <h2>📊 Mon suivi global</h2>
+  <div class="grid">
+    <div><strong>Semaines validées</strong><div id="validatedCount">0 / 52</div></div>
+    <div><strong>Objectifs réussis</strong><div id="successCount">0 / 52</div></div>
+    <div><strong>Difficulté moyenne</strong><div id="avgDifficulty">—</div></div>
+    <div><strong>Progression</strong><div class="progress-wrap"><div id="progress" class="progress"></div></div></div>
+  </div>
+</div>
+
+<div class="card warning">
+  <h2>⚠️ Règles importantes</h2>
+  <ul>
+    <li>Les premières semaines servent d'abord à remettre progressivement la cheville et le tendon d'Achille en charge.</li>
+    <li>La réaction du tendon pendant l'effort et surtout le lendemain guide la progression.</li>
+    <li>Si la douleur ou la raideur augmente nettement, répéter la semaine précédente au lieu de progresser.</li>
+    <li>Douleur forte, claquement/pop, perte brutale de force ou difficulté nouvelle à pousser sur le pied : arrêter la course et demander rapidement un avis médical.</li>
+    <li>Le renforcement doit rester progressif et adapté à la localisation de la tendinopathie. Le kiné est la référence pour valider la reprise de course.</li>
+  </ul>
+</div>
+
+<div class="card success">
+  <h2>👟 Matériel et profil de départ</h2>
+  <div class="grid">
+    <div><strong>Chaussures</strong><br>Brooks Ghost 18 — marche et running quotidien</div>
+    <div><strong>Poids / taille</strong><br>89 kg / 1,73 m</div>
+    <div><strong>Montre</strong><br>Amazfit Balance</div>
+    <div><strong>VO₂max estimée</strong><br>40</div>
+    <div><strong>Point de départ course</strong><br>4,3 km en ~30 min, environ 7:00/km</div>
+    <div><strong>Organisation</strong><br>2 séances de course/semaine, 30 min à 1 h</div>
+  </div>
+</div>
+
+<div class="card">
+<h2>🦵 Renforcement Achille / cheville</h2>
+<p>À maintenir progressivement pendant l'année, généralement 2 fois/semaine, en adaptant selon les recommandations du kiné.</p>
+<ul>
+<li>Montées sur pointe : 3 × 12–15</li>
+<li>Montées sur pointe unilatérales : 3 × 8–12 par jambe</li>
+<li>Mollet genou légèrement fléchi : 3 × 10–15</li>
+<li>Équilibre sur une jambe : 3 × 30–60 s</li>
+<li>Travail fonctionnel/proprioception selon le bilan du kiné</li>
+</ul>
+<p class="small">Ne pas imposer de descentes profondes du talon sous le niveau d'une marche sans savoir si la tendinopathie est insertionnelle ou corporéale.</p>
+</div>
+
+<div class="card">
+<h2>📅 Journal des 52 semaines</h2>
+<p class="small"><strong>Synchronisation :</strong> si Google Apps Script est configuré, chaque modification est automatiquement envoyée au cloud. Le bouton « Synchroniser » recharge aussi les données du cloud. <strong>Chaque semaine contient maintenant 2 fiches distinctes :</strong> une pour la séance 1 et une pour la séance 2. Tu peux donc renseigner séparément la date, la réussite, la difficulté, la gêne Achille, la durée/distance et tes sensations. Le renforcement est suivi à part. Les données sont enregistrées automatiquement dans ton navigateur.</p>
+<div class="controls no-print">
+  <button class="primary" onclick="saveNow()">💾 Enregistrer</button>
+  <button class="secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  <button class="secondary" onclick="exportData()">⬇️ Exporter mon suivi</button>
+  <button class="secondary" onclick="configureCloud()">⚙️ Configuration cloud</button>
+  <button class="secondary" onclick="syncFromCloud()">☁️ Synchroniser</button>
+  <button class="secondary" onclick="showCloudStatus()">🔗 Voir l'URL</button>
+  <button class="secondary" onclick="resetData()">♻️ Réinitialiser</button>
+</div>
+<div id="weeks"></div>
+</div>
+
+<div class="card">
+<h2>🏋️ Intégration HYROX</h2>
+<ul>
+<li><strong>Semaines 1–8 :</strong> priorité cheville + cardio sans impact si disponible.</li>
+<li><strong>Semaines 9–16 :</strong> possibilité d'introduire 1 séance HYROX/renforcement par semaine, si la cheville le permet.</li>
+<li><strong>À partir de janvier/février :</strong> progression possible vers 2 séances HYROX/renforcement + 2 courses, avec gestion de la récupération.</li>
+</ul>
+</div>
+
+<footer>
+Programme personnel — objectif Foulée des Géants 2027. Le programme doit être ajusté en fonction de la cheville, du tendon d'Achille, de la récupération et du bilan du kiné.
+</footer>
+</div>
+
+<script>
+const weeks = [
+["Phase 1 — Remise en condition","28/09–04/10/2026","A : 30 min marche active. B : 30–35 min marche. Renforcement 2× : mollets 3×12, unilatéral 2×8, équilibre 3×30 s.","Reprendre le mouvement sans réveiller l'Achille."],
+["Phase 1 — Remise en condition","05/10–11/10/2026","A : 35 min marche. B : 35–40 min marche. Renforcement : mollets 3×15, unilatéral 3×8, équilibre 3×40 s.","Augmenter légèrement le volume."],
+["Phase 1 — Remise en condition","12/10–18/10/2026","A : 40 min marche. B : 40–45 min marche. Renforcement : mollets 3×15, unilatéral 3×10, équilibre 3×45 s.","Retrouver endurance et confiance."],
+["Phase 1 — Test","19/10–25/10/2026","A : 45 min marche. B : 45 min avec 5×30 s de marche très rapide. Test fin de semaine : 20 montées sur pointe par jambe + équilibre 60 s.","Comparer les sensations droite/gauche."],
+["Phase 2 — Reprise course","26/10–01/11/2026","Sous réserve de validation du kiné : 10 min marche + 6×(1 min course/3 min marche) + 5 min marche, 2 séances.","Reprendre l'impact progressivement."],
+["Phase 2 — Reprise course","02/11–08/11/2026","2 séances : 10 min marche + 8×(1 min 30 course/2 min marche) + 5 min marche.","Environ 12 min de course cumulée."],
+["Phase 2 — Reprise course","09/11–15/11/2026","A : 6×(2 min course/2 min marche). B : 5×(3 min course/2 min marche).","Augmenter le temps couru."],
+["Phase 2 — Reprise course","16/11–22/11/2026","A : 5×(4 min course/2 min marche). B : 4×(5 min course/2 min marche).","Environ 20 min de course cumulée."],
+["Phase 3 — Course continue","23/11–29/11/2026","A : 20–25 min facile. B : 25 min facile.","Courir sans chercher l'allure."],
+["Phase 3 — Course continue","30/11–06/12/2026","A : 25 min. B : 30 min facile.","Augmenter la durée."],
+["Phase 3 — Course continue","07/12–13/12/2026","A : 30 min. B : 30–35 min.","Construire la continuité."],
+["Phase 3 — Test","14/12–20/12/2026","A : 30–35 min. B : 35–40 min facile.","Objectif : 40 min continues si le tendon le permet."],
+["Allégement","21/12–27/12/2026","A : 25–30 min facile. B : 30 min marche active. Renforcement léger.","Assimiler le travail."],
+["Phase 4 — Endurance","28/12/2026–03/01/2027","A : 30 min. B : 35 min.","Reprendre progressivement après les fêtes."],
+["Phase 4 — Endurance","04/01–10/01/2027","A : 35 min. B : 40 min.","Augmenter le volume."],
+["Phase 4 — Endurance","11/01–17/01/2027","A : 35 min. B : 45 min.","Consolider l'endurance."],
+["Phase 4 — Endurance","18/01–24/01/2027","A : 40 min. B : 45 min.","Approcher 5–6 km selon l'allure."],
+["Phase 5 — 5 km","25/01–31/01/2027","A : 40 min facile. B : 5 km tranquille.","Première étape 5 km confortable."],
+["Phase 5 — 5 km","01/02–07/02/2027","A : 35 min. B : 5,5 km.","Poursuivre sans chercher la vitesse."],
+["Phase 5 — 5 km","08/02–14/02/2027","A : 40 min. B : 6 km.","Augmenter doucement."],
+["Phase 5 — Test 5 km","15/02–21/02/2027","A : 35–40 min facile. B : test 5 km en aisance respiratoire.","Mesurer allure, FC et sensations sans courir à fond."],
+["Phase 6 — Endurance","22/02–28/02/2027","A : 40 min. B : 6 km facile.","Base aérobie."],
+["Phase 6 — Endurance","01/03–07/03/2027","A : 40 min. B : 6,5 km.","Progression du volume."],
+["Phase 6 — Endurance","08/03–14/03/2027","A : 35 min. B : 7 km.","Continuer progressivement."],
+["Phase 6 — Endurance","15/03–21/03/2027","A : 45 min. B : 7 km.","Stabiliser le volume."],
+["Phase 6 — Qualité","22/03–28/03/2027","A : 40 min facile. B : 15 min facile + 3×5 min soutenu + 3 min facile entre blocs.","Premières variations d'allure."],
+["Phase 7 — Cap 8 km","29/03–04/04/2027","A : 45 min facile. B : 7 km.","Développer l'endurance."],
+["Phase 7 — Cap 8 km","05/04–11/04/2027","A : 40 min. B : 7,5 km.","Progression."],
+["Phase 7 — Cap 8 km","12/04–18/04/2027","A : 45 min. B : 8 km.","Premier 8 km."],
+["Allégement","19/04–25/04/2027","A : 35 min. B : 6 km facile.","Assimilation."],
+["Phase 8 — Spécifique","26/04–02/05/2027","A : 35–50 min facile. B : 15 min facile + 4×4 min soutenu + 3 min facile.","Structurer les deux séances."],
+["Phase 8 — Spécifique","03/05–09/05/2027","A : 35–50 min facile. B : 15 min + 5×4 min soutenu + 2 min récupération.","Développer le temps soutenu."],
+["Phase 8 — Spécifique","10/05–16/05/2027","A : 35–50 min facile. B : 15 min + 3×6 min soutenu + 3 min récupération.","Tenir des blocs plus longs."],
+["Allégement","17/05–23/05/2027","A : 40 min facile. B : 7 km facile.","Récupération avant le prochain bloc."],
+["Phase 9 — 10 km","24/05–30/05/2027","A : 45 min facile. B : 8 km.","Approcher le 10 km."],
+["Phase 9 — 10 km","31/05–06/06/2027","A : 40 min. B : 9 km.","Augmenter la sortie longue."],
+["Phase 9 — Premier 10 km","07/06–13/06/2027","A : 45 min facile. B : 10 km facile.","Premier 10 km — finir avec de la marge."],
+["Récupération","14/06–20/06/2027","A : 35 min. B : 6–7 km.","Assimiler le premier 10 km."],
+["Phase 10 — Consolidation","21/06–27/06/2027","A : 45 min facile. B : 8 km.","Rendre le volume habituel."],
+["Phase 10 — Consolidation","28/06–04/07/2027","A : 45 min. B : 10 km.","Deuxième 10 km sans recherche de performance."],
+["Phase 10 — Consolidation","05/07–11/07/2027","A : 40 min. B : 8 km avec quelques portions soutenues.","Développer l'aisance."],
+["Allégement","12/07–18/07/2027","A : 35 min. B : 7 km.","Réduire la charge."],
+["Phase 11 — Spécifique course","19/07–25/07/2027","A : 45 min facile. B : 15 min facile + 4×5 min soutenu + 2 min récupération.","Préparation spécifique."],
+["Phase 11 — Spécifique course","26/07–01/08/2027","A : 45 min facile. B : 9 km avec les 3 derniers km légèrement plus rapides.","Apprendre à accélérer en fin de sortie."],
+["Phase 11 — Spécifique course","02/08–08/08/2027","A : 40 min. B : 10 km tranquille.","Consolider."],
+["Allégement","09/08–15/08/2027","A : 35 min. B : 7 km.","Récupération."],
+["Phase 12 — Préparation finale","16/08–22/08/2027","A : 45 min facile. B : 10 km.","Confiance sur la distance."],
+["Phase 12 — Préparation finale","23/08–29/08/2027","A : 40 min. B : 15 min facile + 3×8 min à allure cible + 3 min récupération.","Séance spécifique allure course."],
+["Phase 12 — Préparation finale","30/08–05/09/2027","A : 40 min. B : 10 km en conditions proches de la course.","Dernière grosse répétition."],
+["Phase 13 — Affûtage","06/09–12/09/2027","A : 40 min facile. B : 8 km.","Réduire progressivement le volume."],
+["Phase 13 — Affûtage","13/09–19/09/2027","A : 30–35 min facile. B : 6 km avec 3×3 min à allure course.","Garder du rythme sans fatigue."],
+["🏁 Course","Semaine de la Foulée des Géants","Début de semaine : 20–30 min très facile. Puis récupération et course : 10 km.","Arriver frais et sans douleur — Foulée des Géants 2027."]
+];
+
+
+// ===== SYNCHRONISATION GOOGLE SHEETS =====
+// Google Apps Script redirige parfois les requêtes Web App, ce qui bloque
+// fetch() depuis un fichier HTML local à cause de CORS.
+// Cette version utilise JSONP pour la lecture et un formulaire invisible pour l'écriture.
+function getCloudUrl(){ return localStorage.getItem("foulee_cloud_url") || ""; }
+
+function cloudGetJsonp(){
+  return new Promise((resolve,reject)=>{
+    const url=getCloudUrl();
+    if(!url){ reject(new Error("URL Google Apps Script absente")); return; }
+
+    const cb="fouleeCallback_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+    const script=document.createElement("script");
+    const timer=setTimeout(()=>{
+      cleanup();
+      reject(new Error("Délai dépassé. Vérifie l'URL /exec et le déploiement Apps Script."));
+    },15000);
+
+    function cleanup(){
+      clearTimeout(timer);
+      delete window[cb];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cb]=(result)=>{
+      cleanup();
+      if(result && result.ok) resolve(result.data||{});
+      else reject(new Error((result&&result.error)||"Réponse Apps Script invalide"));
+    };
+
+    script.onerror=()=>{
+      cleanup();
+      reject(new Error("Impossible de contacter Google Apps Script. Vérifie le déploiement Web App."));
+    };
+
+    script.src=url+"?action=get&callback="+encodeURIComponent(cb)+"&_="+Date.now();
+    document.body.appendChild(script);
+  });
+}
+
+function cloudSaveForm(data){
+  return new Promise((resolve,reject)=>{
+    const url=getCloudUrl();
+    if(!url){ reject(new Error("URL Google Apps Script absente")); return; }
+
+    const iframe=document.createElement("iframe");
+    iframe.name="foulee_save_"+Date.now();
+    iframe.style.display="none";
+    document.body.appendChild(iframe);
+
+    const form=document.createElement("form");
+    form.method="POST";
+    form.action=url;
+    form.target=iframe.name;
+    form.style.display="none";
+
+    const action=document.createElement("input");
+    action.name="action"; action.value="save";
+    const dataInput=document.createElement("input");
+    dataInput.name="data"; dataInput.value=JSON.stringify(data);
+
+    form.appendChild(action);
+    form.appendChild(dataInput);
+    document.body.appendChild(form);
+
+    let done=false;
+    const finish=()=>{
+      if(done) return;
+      done=true;
+      setTimeout(()=>{
+        form.remove();
+        iframe.remove();
+      },500);
+      resolve();
+    };
+    iframe.onload=finish;
+    form.submit();
+
+    setTimeout(()=>{
+      if(!done) finish();
+    },5000);
+  });
+}
+
+async function syncFromCloud(){
+  if(!getCloudUrl()){ alert("Ajoute d'abord l'URL Google Apps Script dans Configuration."); return; }
+  try{
+    const data=await cloudGetJsonp();
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    render();
+    alert("☁️ Données synchronisées depuis Google Sheets.");
+  }catch(e){ alert("Impossible de synchroniser : "+e.message); }
+}
+
+async function syncToCloud(){
+  if(!getCloudUrl()){ alert("Ajoute d'abord l'URL Google Apps Script dans Configuration."); return; }
+  try{
+    const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
+    await cloudSaveForm(data);
+    alert("☁️ Données envoyées vers Google Sheets.");
+  }catch(e){ alert("Impossible de sauvegarder : "+e.message); }
+}
+
+function configureCloud(){
+  const current=getCloudUrl();
+  const url=prompt("Colle ici l'URL /exec de ton Google Apps Script :", current);
+  if(url===null) return;
+  const clean=url.trim();
+  if(clean){
+    localStorage.setItem("foulee_cloud_url", clean);
+    const check=localStorage.getItem("foulee_cloud_url");
+    if(check===clean) alert("URL enregistrée. Tu peux maintenant cliquer sur « ☁️ Synchroniser ».");
+    else alert("Le navigateur n'a pas réussi à conserver l'URL.");
+  }else{
+    localStorage.removeItem("foulee_cloud_url");
+    alert("Synchronisation cloud désactivée.");
+  }
+}
+
+function showCloudStatus(){
+  const url=getCloudUrl();
+  if(url) alert("URL actuellement enregistrée :\n\n"+url);
+  else alert("Aucune URL Google Apps Script enregistrée.");
+}
+
+const storageKey="foulee_geants_2027_suivi_v2";
+const oldKey="foulee_geants_2027_suivi_v1";
+if(!localStorage.getItem(storageKey) && localStorage.getItem(oldKey)){
+  localStorage.removeItem(oldKey);
+}
+
+function sessionForm(i, s, label, d){
+  return `
+    <div class="card" style="margin:12px 0;border-left:4px solid ${s===1?'#2563eb':'#0f766e'}">
+      <h3 style="margin-top:0">${label}</h3>
+      <div class="fields">
+        <div><label>Date réalisée</label><input type="date" data-i="${i}" data-s="${s}" data-k="date" value="${d.date||""}"></div>
+        <div><label>Objectif</label><select data-i="${i}" data-s="${s}" data-k="success">
+          <option value="">— À renseigner —</option>
+          <option value="Oui" ${d.success==="Oui"?"selected":""}>✅ Réussi</option>
+          <option value="Partiel" ${d.success==="Partiel"?"selected":""}>🟠 Partiel</option>
+          <option value="Non" ${d.success==="Non"?"selected":""}>❌ Non réussi</option>
+        </select></div>
+        <div><label>Difficulté /10</label><input type="number" min="0" max="10" step="1" data-i="${i}" data-s="${s}" data-k="difficulty" value="${d.difficulty||""}" placeholder="ex. 6"></div>
+        <div><label>Douleur/gêne Achille /10</label><input type="number" min="0" max="10" step="1" data-i="${i}" data-s="${s}" data-k="pain" value="${d.pain||""}" placeholder="ex. 1"></div>
+      </div>
+      <div class="fields">
+        <div><label>Distance / durée réellement réalisée</label><input type="text" data-i="${i}" data-s="${s}" data-k="actual" value="${d.actual||""}" placeholder="ex. 5,2 km — 36 min"></div>
+        <div><label>FC moyenne (optionnel)</label><input type="text" data-i="${i}" data-s="${s}" data-k="hr" value="${d.hr||""}" placeholder="ex. 145 bpm"></div>
+        <div><label>VO₂max (optionnel)</label><input type="text" data-i="${i}" data-s="${s}" data-k="vo2" value="${d.vo2||""}" placeholder="ex. 41"></div>
+      </div>
+      <div style="margin-top:10px">
+        <label>Commentaires / sensations</label>
+        <textarea data-i="${i}" data-s="${s}" data-k="notes" placeholder="Cheville, souffle, jambes, motivation, récupération le lendemain...">${d.notes||""}</textarea>
+      </div>
+    </div>`;
+}
+
+function render(){
+  const root=document.getElementById("weeks");
+  const saved=JSON.parse(localStorage.getItem(storageKey)||"{}");
+  root.innerHTML="";
+  weeks.forEach((w,i)=>{
+    const d=saved[i]||{};
+    const s1=d.s1||{}, s2=d.s2||{};
+    const div=document.createElement("div");
+    div.className="week";
+    div.innerHTML=`
+      <h3>Semaine ${i+1} — ${w[0]} <span class="badge">${w[1]}</span></h3>
+      <div class="content">
+        <p><strong>Programme :</strong> ${w[2]}</p>
+        <p><strong>Objectif de la semaine :</strong> ${w[3]}</p>
+        ${sessionForm(i,1,"🏃 Séance 1",s1)}
+        ${sessionForm(i,2,"🏃 Séance 2",s2)}
+        <div class="card" style="margin:12px 0;background:#f8fafc">
+          <h3 style="margin-top:0">🦵 Renforcement / cheville</h3>
+          <div class="fields">
+            <div><label>Renforcement réalisé</label><select data-i="${i}" data-s="week" data-k="strength">
+              <option value="">— À renseigner —</option>
+              <option value="Oui" ${d.strength==="Oui"?"selected":""}>✅ Oui</option>
+              <option value="Partiel" ${d.strength==="Partiel"?"selected":""}>🟠 Partiel</option>
+              <option value="Non" ${d.strength==="Non"?"selected":""}>❌ Non</option>
+            </select></div>
+            <div><label>Réaction le lendemain /10</label><input type="number" min="0" max="10" data-i="${i}" data-s="week" data-k="nextDay" value="${d.nextDay||""}" placeholder="ex. 1"></div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Note générale de la semaine</label>
+            <textarea data-i="${i}" data-s="week" data-k="weekNotes" placeholder="Ce qui a bien marché, difficulté, fatigue, cheville...">${d.weekNotes||""}</textarea>
+          </div>
+        </div>
+      </div>`;
+    root.appendChild(div);
+  });
+  root.querySelectorAll("[data-i]").forEach(el=>{
+    el.addEventListener("input",()=>{saveField(el);});
+    el.addEventListener("change",()=>{saveField(el);});
+  });
+  updateStats();
+}
+
+let cloudTimer=null;
+function saveField(el){
+  const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
+  const i=el.dataset.i;
+  data[i]=data[i]||{};
+  if(el.dataset.s==="week"){
+    data[i][el.dataset.k]=el.value;
+  } else {
+    const s=el.dataset.s==="1" ? "s1" : "s2";
+    data[i][s]=data[i][s]||{};
+    data[i][s][el.dataset.k]=el.value;
+  }
+  localStorage.setItem(storageKey,JSON.stringify(data));
+  updateStats();
+  if(getCloudUrl()){
+    clearTimeout(cloudTimer);
+    cloudTimer=setTimeout(()=>syncToCloudSilently(),1200);
+  }
+}
+async function syncToCloudSilently(){
+  try{
+    const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
+    await cloudSaveForm(data);
+  }catch(e){ console.warn("Cloud sync:", e); }
+}
+
+function showCloudStatus(){
+  const url=getCloudUrl();
+  alert(url ? "URL actuellement enregistrée :\n\n"+url : "Aucune URL Google Apps Script enregistrée.");
+}
+function saveNow(){
+  localStorage.setItem(storageKey,localStorage.getItem(storageKey)||"{}");
+  alert("Suivi enregistré dans ce navigateur.");
+}
+
+function updateStats(){
+  const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
+  let sessions=0, success=0, diffs=[];
+  Object.values(data).forEach(w=>{
+    ["s1","s2"].forEach(k=>{
+      const d=w[k]||{};
+      if(d.date) sessions++;
+      if(d.success==="Oui") success++;
+      if(d.difficulty!==undefined && d.difficulty!=="") diffs.push(Number(d.difficulty));
+    });
+  });
+  document.getElementById("validatedCount").textContent=sessions+" / 104 séances";
+  document.getElementById("successCount").textContent=success+" / 104 séances";
+  document.getElementById("avgDifficulty").textContent=diffs.length ? (diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)+"/10" : "—";
+  document.getElementById("progress").style.width=Math.round(sessions/104*100)+"%";
+}
+function exportData(){
+  const data=localStorage.getItem(storageKey)||"{}";
+  const blob=new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="suivi_foulee_geants_2027.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function resetData(){
+  if(confirm("Effacer toutes les données de suivi ?")){
+    localStorage.removeItem(storageKey);
+    render();
+  }
+}
+render();
+</script>
+</body>
+</html>
