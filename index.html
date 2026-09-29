@@ -47,6 +47,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
  .card{box-shadow:none;break-inside:avoid}
  header{background:#172554!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+.chart-wrap{position:relative;width:100%;height:320px;margin-top:10px}
+.chart-wrap canvas{width:100%;height:100%;display:block}
+.status{margin-top:10px;padding:9px 12px;border-radius:8px;background:#f8fafc;color:var(--muted);font-size:13px}
+.danger-btn{background:#fee2e2;color:#991b1b}
+.session-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
 </style>
 </head>
 <body>
@@ -60,10 +67,26 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card">
   <h2>📊 Mon suivi global</h2>
   <div class="grid">
-    <div><strong>Semaines validées</strong><div id="validatedCount">0 / 52</div></div>
-    <div><strong>Objectifs réussis</strong><div id="successCount">0 / 52</div></div>
+    <div><strong>Séances renseignées</strong><div id="validatedCount">0 / 104</div></div>
+    <div><strong>Objectifs réussis</strong><div id="successCount">0 / 104</div></div>
     <div><strong>Difficulté moyenne</strong><div id="avgDifficulty">—</div></div>
+    <div><strong>Distance totale</strong><div id="totalDistance">0 km</div></div>
+    <div><strong>Temps total</strong><div id="totalDuration">0 min</div></div>
     <div><strong>Progression</strong><div class="progress-wrap"><div id="progress" class="progress"></div></div></div>
+  </div>
+  <div id="cloudStatus" class="status">☁️ Cloud : non configuré</div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>📈 Distance par séance</h2>
+    <p class="small">Date en abscisse • distance réellement réalisée en km en ordonnée.</p>
+    <div class="chart-wrap"><canvas id="distanceChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>⏱️ Durée par séance</h2>
+    <p class="small">Date en abscisse • durée réellement réalisée en minutes en ordonnée.</p>
+    <div class="chart-wrap"><canvas id="durationChart"></canvas></div>
   </div>
 </div>
 
@@ -105,15 +128,15 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 
 <div class="card">
 <h2>📅 Journal des 52 semaines</h2>
-<p class="small"><strong>Synchronisation :</strong> si Google Apps Script est configuré, chaque modification est automatiquement envoyée au cloud. Le bouton « Synchroniser » recharge aussi les données du cloud. <strong>Chaque semaine contient maintenant 2 fiches distinctes :</strong> une pour la séance 1 et une pour la séance 2. Tu peux donc renseigner séparément la date, la réussite, la difficulté, la gêne Achille, la durée/distance et tes sensations. Le renforcement est suivi à part. Les données sont enregistrées automatiquement dans ton navigateur.</p>
+<p class="small"><strong>Synchronisation :</strong> les saisies sont d'abord enregistrées dans ce navigateur. Le bouton « 💾 Sauvegarder dans le cloud » envoie ensuite l'ensemble du suivi vers Google Sheets. « ☁️ Synchroniser depuis le cloud » recharge les données présentes dans Google Sheets. <strong>Chaque semaine contient 2 fiches distinctes.</strong> La distance et la durée sont maintenant séparées pour permettre les graphiques. Tu peux aussi effacer une séance individuellement.</p>
 <div class="controls no-print">
-  <button class="primary" onclick="saveNow()">💾 Enregistrer</button>
-  <button class="secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
-  <button class="secondary" onclick="exportData()">⬇️ Exporter mon suivi</button>
+  <button class="primary" onclick="saveNow()">💾 Sauvegarder dans le cloud</button>
+  <button class="secondary" onclick="syncFromCloud()">☁️ Synchroniser depuis le cloud</button>
   <button class="secondary" onclick="configureCloud()">⚙️ Configuration cloud</button>
-  <button class="secondary" onclick="syncFromCloud()">☁️ Synchroniser</button>
   <button class="secondary" onclick="showCloudStatus()">🔗 Voir l'URL</button>
-  <button class="secondary" onclick="resetData()">♻️ Réinitialiser</button>
+  <button class="secondary" onclick="exportData()">⬇️ Exporter mon suivi</button>
+  <button class="secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  <button class="danger-btn" onclick="resetData()">♻️ Réinitialiser partout</button>
 </div>
 <div id="weeks"></div>
 </div>
@@ -314,10 +337,196 @@ function showCloudStatus(){
   else alert("Aucune URL Google Apps Script enregistrée.");
 }
 
-const storageKey="foulee_geants_2027_suivi_v2";
-const oldKey="foulee_geants_2027_suivi_v1";
-if(!localStorage.getItem(storageKey) && localStorage.getItem(oldKey)){
-  localStorage.removeItem(oldKey);
+const storageKey="foulee_geants_2027_suivi_v3";
+const oldKeys=["foulee_geants_2027_suivi_v2","foulee_geants_2027_suivi_v1"];
+let dirty=false;
+let lastSyncText="";
+
+function getCloudUrl(){ return localStorage.getItem("foulee_cloud_url") || ""; }
+
+function parseLegacyActual_(actual){
+  if(!actual) return {};
+  const str=String(actual).replace(",", ".");
+  const kmMatch=str.match(/(\d+(?:\.\d+)?)\s*km/i);
+  const minMatch=str.match(/(\d+(?:\.\d+)?)\s*(?:min|minutes?)/i);
+  const out={};
+  if(kmMatch) out.distance=Number(kmMatch[1]);
+  if(minMatch) out.duration=Number(minMatch[1]);
+  return out;
+}
+
+function normalizeData_(raw){
+  const out={};
+  if(!raw || typeof raw!=="object") return out;
+  Object.keys(raw).forEach(i=>{
+    const w=raw[i]||{};
+    out[i]={...w};
+    ["s1","s2"].forEach(k=>{
+      const s=w[k];
+      if(!s || typeof s!=="object") return;
+      out[i][k]={...s};
+      if((out[i][k].distance==null || out[i][k].distance==="") &&
+         (out[i][k].duration==null || out[i][k].duration==="") && s.actual){
+        Object.assign(out[i][k],parseLegacyActual_(s.actual));
+      }
+    });
+  });
+  return out;
+}
+
+function loadLocal_(){
+  let raw=localStorage.getItem(storageKey);
+  if(raw) return normalizeData_(JSON.parse(raw));
+  for(const k of oldKeys){
+    const old=localStorage.getItem(k);
+    if(old){
+      const migrated=normalizeData_(JSON.parse(old));
+      localStorage.setItem(storageKey,JSON.stringify(migrated));
+      return migrated;
+    }
+  }
+  return {};
+}
+
+function setLocal_(data){
+  localStorage.setItem(storageKey,JSON.stringify(normalizeData_(data)));
+}
+
+function updateCloudStatus_(msg){
+  const el=document.getElementById("cloudStatus");
+  if(el) el.textContent=msg;
+}
+
+function cloudGetJsonp(){
+  return new Promise((resolve,reject)=>{
+    const url=getCloudUrl();
+    if(!url){ reject(new Error("URL Google Apps Script absente")); return; }
+    const cb="fouleeCallback_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+    const script=document.createElement("script");
+    const timer=setTimeout(()=>{cleanup();reject(new Error("Délai dépassé. Vérifie l'URL /exec et le déploiement Apps Script."));},15000);
+    function cleanup(){clearTimeout(timer);delete window[cb];if(script.parentNode)script.parentNode.removeChild(script);}
+    window[cb]=(result)=>{cleanup();if(result&&result.ok)resolve(result.data||{});else reject(new Error((result&&result.error)||"Réponse Apps Script invalide"));};
+    script.onerror=()=>{cleanup();reject(new Error("Impossible de contacter Google Apps Script. Vérifie le déploiement Web App."));};
+    script.src=url+"?action=get&callback="+encodeURIComponent(cb)+"&_="+Date.now();
+    document.body.appendChild(script);
+  });
+}
+
+function cloudSaveForm(data){
+  return new Promise((resolve,reject)=>{
+    const url=getCloudUrl();
+    if(!url){reject(new Error("URL Google Apps Script absente"));return;}
+    const iframe=document.createElement("iframe");
+    iframe.name="foulee_save_"+Date.now();
+    iframe.style.display="none";
+    document.body.appendChild(iframe);
+    const form=document.createElement("form");
+    form.method="POST";form.action=url;form.target=iframe.name;form.style.display="none";
+    const action=document.createElement("input");action.name="action";action.value="save";
+    const dataInput=document.createElement("input");dataInput.name="data";dataInput.value=JSON.stringify(data);
+    form.appendChild(action);form.appendChild(dataInput);document.body.appendChild(form);
+    let done=false;
+    const finish=()=>{if(done)return;done=true;setTimeout(()=>{form.remove();iframe.remove();},500);resolve();};
+    iframe.onload=finish;form.submit();setTimeout(()=>{if(!done)finish();},5000);
+  });
+}
+
+function cloudResetForm(){
+  return new Promise((resolve,reject)=>{
+    const url=getCloudUrl();
+    if(!url){reject(new Error("URL Google Apps Script absente"));return;}
+    const iframe=document.createElement("iframe");
+    iframe.name="foulee_reset_"+Date.now();iframe.style.display="none";document.body.appendChild(iframe);
+    const form=document.createElement("form");
+    form.method="POST";form.action=url;form.target=iframe.name;form.style.display="none";
+    const action=document.createElement("input");action.name="action";action.value="reset";
+    form.appendChild(action);document.body.appendChild(form);
+    let done=false;
+    const finish=()=>{if(done)return;done=true;setTimeout(()=>{form.remove();iframe.remove();},500);resolve();};
+    iframe.onload=finish;form.submit();setTimeout(()=>{if(!done)finish();},5000);
+  });
+}
+
+async function syncFromCloud(){
+  if(!getCloudUrl()){alert("Ajoute d'abord l'URL Google Apps Script dans Configuration.");return;}
+  if(dirty && !confirm("Des modifications locales n'ont pas encore été sauvegardées. Synchroniser va les remplacer par les données du cloud. Continuer ?")) return;
+  try{
+    updateCloudStatus_("☁️ Synchronisation en cours…");
+    const data=normalizeData_(await cloudGetJsonp());
+    setLocal_(data);dirty=false;lastSyncText=new Date().toLocaleString("fr-FR");
+    render();updateCloudStatus_("☁️ Dernière synchronisation : "+lastSyncText);
+    alert("☁️ Données récupérées depuis Google Sheets.");
+  }catch(e){updateCloudStatus_("❌ Erreur de synchronisation");alert("Impossible de synchroniser : "+e.message);}
+}
+
+async function syncToCloud(){
+  if(!getCloudUrl()){alert("Ajoute d'abord l'URL Google Apps Script dans Configuration.");return;}
+  try{
+    const data=loadLocal_();
+    setLocal_(data);
+    updateCloudStatus_("☁️ Sauvegarde dans le cloud…");
+    await cloudSaveForm(data);
+    dirty=false;lastSyncText=new Date().toLocaleString("fr-FR");
+    updateCloudStatus_("☁️ Données sauvegardées : "+lastSyncText);
+    alert("☁️ Suivi sauvegardé dans Google Sheets.");
+  }catch(e){updateCloudStatus_("❌ Échec de sauvegarde");alert("Impossible de sauvegarder : "+e.message);}
+}
+
+function configureCloud(){
+  const current=getCloudUrl();
+  const url=prompt("Colle ici l'URL /exec de ton Google Apps Script :",current);
+  if(url===null)return;
+  const clean=url.trim();
+  if(clean){localStorage.setItem("foulee_cloud_url",clean);updateCloudStatus_("☁️ URL cloud configurée.");alert("URL enregistrée. Tu peux maintenant sauvegarder ou synchroniser.");}
+  else{localStorage.removeItem("foulee_cloud_url");updateCloudStatus_("☁️ Cloud non configuré.");alert("Synchronisation cloud désactivée.");}
+}
+
+function showCloudStatus(){
+  const url=getCloudUrl();
+  alert(url?"URL actuellement enregistrée :\n\n"+url:"Aucune URL Google Apps Script enregistrée.");
+}
+
+function saveNow(){
+  if(!getCloudUrl()){
+    localStorage.setItem(storageKey,JSON.stringify(loadLocal_()));
+    dirty=false;updateCloudStatus_("💾 Données enregistrées uniquement sur cet appareil.");
+    alert("Suivi enregistré sur cet appareil. Ajoute l'URL du Web App pour l'envoyer dans le cloud.");
+    return;
+  }
+  syncToCloud();
+}
+
+function clearSession(i,s){
+  if(!confirm("Effacer toutes les données de cette séance ?")) return;
+  const data=loadLocal_();
+  if(data[i]){
+    delete data[i][s===1?"s1":"s2"];
+    setLocal_(data);
+    dirty=true;
+    render();
+  }
+  if(getCloudUrl()) syncToCloud();
+}
+
+async function resetData(){
+  if(!confirm("Effacer TOUT le suivi sur cet appareil ET dans Google Sheets ? Cette action est irréversible.")) return;
+  localStorage.removeItem(storageKey);
+  dirty=false;
+  render();
+  if(getCloudUrl()){
+    try{
+      updateCloudStatus_("☁️ Réinitialisation du cloud…");
+      await cloudResetForm();
+      updateCloudStatus_("☁️ Suivi réinitialisé partout.");
+      alert("♻️ Le suivi a été réinitialisé sur cet appareil et dans Google Sheets.");
+    }catch(e){
+      updateCloudStatus_("⚠️ Réinitialisation locale effectuée, cloud non confirmé.");
+      alert("Le suivi local a été effacé, mais la réinitialisation cloud n'a pas été confirmée : "+e.message);
+    }
+  }else{
+    updateCloudStatus_("💾 Suivi local réinitialisé.");
+    alert("♻️ Suivi local réinitialisé.");
+  }
 }
 
 function sessionForm(i, s, label, d){
@@ -336,7 +545,8 @@ function sessionForm(i, s, label, d){
         <div><label>Douleur/gêne Achille /10</label><input type="number" min="0" max="10" step="1" data-i="${i}" data-s="${s}" data-k="pain" value="${d.pain||""}" placeholder="ex. 1"></div>
       </div>
       <div class="fields">
-        <div><label>Distance / durée réellement réalisée</label><input type="text" data-i="${i}" data-s="${s}" data-k="actual" value="${d.actual||""}" placeholder="ex. 5,2 km — 36 min"></div>
+        <div><label>Distance réellement réalisée (km)</label><input type="number" min="0" step="0.01" data-i="${i}" data-s="${s}" data-k="distance" value="${d.distance??""}" placeholder="ex. 5,20"></div>
+        <div><label>Durée réellement réalisée (min)</label><input type="number" min="0" step="1" data-i="${i}" data-s="${s}" data-k="duration" value="${d.duration??""}" placeholder="ex. 36"></div>
         <div><label>FC moyenne (optionnel)</label><input type="text" data-i="${i}" data-s="${s}" data-k="hr" value="${d.hr||""}" placeholder="ex. 145 bpm"></div>
         <div><label>VO₂max (optionnel)</label><input type="text" data-i="${i}" data-s="${s}" data-k="vo2" value="${d.vo2||""}" placeholder="ex. 41"></div>
       </div>
@@ -344,12 +554,15 @@ function sessionForm(i, s, label, d){
         <label>Commentaires / sensations</label>
         <textarea data-i="${i}" data-s="${s}" data-k="notes" placeholder="Cheville, souffle, jambes, motivation, récupération le lendemain...">${d.notes||""}</textarea>
       </div>
+      <div class="session-actions no-print">
+        <button class="danger-btn" type="button" onclick="clearSession(${i},${s})">🗑️ Effacer cette séance</button>
+      </div>
     </div>`;
 }
 
 function render(){
   const root=document.getElementById("weeks");
-  const saved=JSON.parse(localStorage.getItem(storageKey)||"{}");
+  const saved=loadLocal_();
   root.innerHTML="";
   weeks.forEach((w,i)=>{
     const d=saved[i]||{};
@@ -391,55 +604,113 @@ function render(){
 
 let cloudTimer=null;
 function saveField(el){
-  const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
+  const data=loadLocal_();
   const i=el.dataset.i;
   data[i]=data[i]||{};
   if(el.dataset.s==="week"){
     data[i][el.dataset.k]=el.value;
-  } else {
-    const s=el.dataset.s==="1" ? "s1" : "s2";
+  }else{
+    const s=el.dataset.s==="1"?"s1":"s2";
     data[i][s]=data[i][s]||{};
     data[i][s][el.dataset.k]=el.value;
   }
-  localStorage.setItem(storageKey,JSON.stringify(data));
+  setLocal_(data);
+  dirty=true;
   updateStats();
-  if(getCloudUrl()){
-    clearTimeout(cloudTimer);
-    cloudTimer=setTimeout(()=>syncToCloudSilently(),1200);
-  }
-}
-async function syncToCloudSilently(){
-  try{
-    const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
-    await cloudSaveForm(data);
-  }catch(e){ console.warn("Cloud sync:", e); }
-}
-
-function showCloudStatus(){
-  const url=getCloudUrl();
-  alert(url ? "URL actuellement enregistrée :\n\n"+url : "Aucune URL Google Apps Script enregistrée.");
-}
-function saveNow(){
-  localStorage.setItem(storageKey,localStorage.getItem(storageKey)||"{}");
-  alert("Suivi enregistré dans ce navigateur.");
 }
 
 function updateStats(){
-  const data=JSON.parse(localStorage.getItem(storageKey)||"{}");
-  let sessions=0, success=0, diffs=[];
+  const data=loadLocal_();
+  let sessions=0,success=0,diffs=[],totalDistance=0,totalDuration=0;
+  const rows=[];
   Object.values(data).forEach(w=>{
     ["s1","s2"].forEach(k=>{
       const d=w[k]||{};
       if(d.date) sessions++;
       if(d.success==="Oui") success++;
-      if(d.difficulty!==undefined && d.difficulty!=="") diffs.push(Number(d.difficulty));
+      if(d.difficulty!==undefined && d.difficulty!==""){
+        const n=Number(d.difficulty);if(Number.isFinite(n))diffs.push(n);
+      }
+      const dist=Number(String(d.distance??"").replace(",","."));
+      const dur=Number(String(d.duration??"").replace(",","."));
+      if(Number.isFinite(dist)&&dist>0)totalDistance+=dist;
+      if(Number.isFinite(dur)&&dur>0)totalDuration+=dur;
+      if(d.date && ((Number.isFinite(dist)&&dist>0)||(Number.isFinite(dur)&&dur>0))){
+        rows.push({date:d.date,distance:(Number.isFinite(dist)&&dist>0)?dist:null,duration:(Number.isFinite(dur)&&dur>0)?dur:null});
+      }
     });
   });
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
   document.getElementById("validatedCount").textContent=sessions+" / 104 séances";
   document.getElementById("successCount").textContent=success+" / 104 séances";
-  document.getElementById("avgDifficulty").textContent=diffs.length ? (diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)+"/10" : "—";
+  document.getElementById("avgDifficulty").textContent=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(1)+"/10":"—";
+  document.getElementById("totalDistance").textContent=totalDistance.toFixed(2).replace(".",",")+" km";
+  document.getElementById("totalDuration").textContent=formatMinutes_(totalDuration);
   document.getElementById("progress").style.width=Math.round(sessions/104*100)+"%";
+  drawLineChart_("distanceChart",rows.filter(r=>r.distance!==null).map(r=>({date:r.date,value:r.distance})),"Distance (km)","km");
+  drawLineChart_("durationChart",rows.filter(r=>r.duration!==null).map(r=>({date:r.date,value:r.duration})),"Durée (min)","min");
 }
+
+function formatMinutes_(minutes){
+  const n=Math.round(minutes);
+  if(n<60)return n+" min";
+  const h=Math.floor(n/60),m=n%60;
+  return h+" h"+(m?(" "+String(m).padStart(2,"0")):"");
+}
+
+function formatDate_(iso){
+  const p=String(iso).split("-");
+  if(p.length!==3)return iso;
+  return p[2]+"/"+p[1]+"/"+p[0];
+}
+
+function drawLineChart_(canvasId,points,yLabel,unit){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const rect=canvas.getBoundingClientRect();
+  const width=Math.max(320,Math.floor(rect.width||canvas.parentElement.clientWidth||600));
+  const height=Math.max(260,Math.floor(rect.height||320));
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=width*dpr;canvas.height=height*dpr;
+  const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,width,height);
+  const left=52,right=18,top=28,bottom=48;
+  const plotW=width-left-right,plotH=height-top-bottom;
+  ctx.font="12px Arial,Helvetica,sans-serif";
+  ctx.fillStyle="#6b7280";
+  if(!points.length){
+    ctx.textAlign="center";ctx.fillText("Aucune donnée disponible",width/2,height/2);
+    return;
+  }
+  const maxVal=Math.max(...points.map(p=>p.value),1);
+  const step=maxVal/4;
+  ctx.strokeStyle="#dbe1e8";ctx.lineWidth=1;
+  ctx.fillStyle="#6b7280";ctx.textAlign="right";
+  for(let j=0;j<=4;j++){
+    const y=top+plotH-(j/4)*plotH;
+    ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(left+plotW,y);ctx.stroke();
+    ctx.fillText((step*j).toFixed(unit==="km"?1:0),left-8,y+4);
+  }
+  ctx.save();ctx.translate(14,top+plotH/2);ctx.rotate(-Math.PI/2);ctx.textAlign="center";ctx.fillStyle="#374151";ctx.fillText(yLabel,0,0);ctx.restore();
+  const xFor=i=>points.length===1?left+plotW/2:left+(i/(points.length-1))*plotW;
+  const yFor=v=>top+plotH-(v/maxVal)*plotH;
+  ctx.strokeStyle="#2563eb";ctx.lineWidth=2.5;ctx.beginPath();
+  points.forEach((p,i)=>{const x=xFor(i),y=yFor(p.value);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+  points.forEach((p,i)=>{
+    const x=xFor(i),y=yFor(p.value);
+    ctx.fillStyle="#2563eb";ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+  });
+  ctx.fillStyle="#6b7280";ctx.textAlign="center";
+  const maxLabels=Math.max(2,Math.floor(plotW/90));
+  const stride=Math.max(1,Math.ceil(points.length/maxLabels));
+  points.forEach((p,i)=>{
+    if(i%stride===0 || i===points.length-1)ctx.fillText(formatDate_(p.date),xFor(i),height-20);
+  });
+}
+
+window.addEventListener("resize",()=>updateStats());
+
 function exportData(){
   const data=localStorage.getItem(storageKey)||"{}";
   const blob=new Blob([data],{type:"application/json"});
@@ -449,13 +720,10 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(a.href);
 }
-function resetData(){
-  if(confirm("Effacer toutes les données de suivi ?")){
-    localStorage.removeItem(storageKey);
-    render();
-  }
-}
+
 render();
+if(getCloudUrl()) updateCloudStatus_("☁️ Cloud configuré. Pense à sauvegarder après tes modifications.");
+else updateCloudStatus_("☁️ Cloud non configuré.");
 </script>
 </body>
 </html>
